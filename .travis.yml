@@ -1,0 +1,24 @@
+sudo: required
+services:
+  - dockerfile
+
+before_install:
+  -docker build -t keldstehr/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run keldstehr/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t keldstehr/multi-client -f ./client
+  - docker build -t keldstehr/multi-nginx -f ./nginx
+  - docker build -t keldstehr/multi-server -f ./server
+  - docker build -t keldstehr/multi-worker -f ./worker
+  # login in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  #take those images and push to dockerhub
+  - docker push keldstehr/multi-client
+  - docker push keldstehr/multi-nginx
+  - docker push keldstehr/multi-server
+  - docker push keldstehr/multi-worker
+
+
